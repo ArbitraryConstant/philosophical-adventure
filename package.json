@@ -1,0 +1,16 @@
+{
+  "name": "philosophical-adventure",
+  "version": "1.0.0",
+  "description": "A philosophical choose-your-own-adventure game exploring Deleuzean and Daoist concepts",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "node-fetch": "^2.7.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

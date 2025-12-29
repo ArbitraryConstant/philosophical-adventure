@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Way of Becoming</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@300;400;600&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --ink: #1a1510;
+            --paper: #f5f1e8;
+            --accent: #8b4513;
+            --muted: #c9b896;
+            --shadow: rgba(26, 21, 16, 0.1);
+        }
+
+        body {
+            font-family: 'Zen Kaku Gothic New', sans-serif;
+            background: linear-gradient(135deg, #f5f1e8 0%, #e8dfc9 100%);
+            color: var(--ink);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(26, 21, 16, 0.02) 2px, rgba(26, 21, 16, 0.02) 4px);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            position: relative;
+            z-index: 2;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .title {
+            font-family: 'Crimson Pro', serif;
+            font-size: 3.5rem;
+            font-weight: 300;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+            text-shadow: 2px 2px 4px var(--shadow);
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--muted);
+            font-weight: 300;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 2px;
+            padding: 3rem;
+            box-shadow: 
+                0 20px 60px var(--shadow),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(139, 69, 19, 0.1);
+            position: relative;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            border: 1px solid rgba(139, 69, 19, 0.05);
+            pointer-events: none;
+        }
+
+        .start-screen {
+            text-align: center;
+        }
+
+        .start-description {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: var(--muted);
+            margin-bottom: 2rem;
+        }
+
+        .story-text {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.2rem;
+            line-height: 1.8;
+            margin-bottom: 2rem;
+            color: var(--ink);
+            font-weight: 300;
+            opacity: 0;
+            animation: fadeIn 1s ease-out 0.3s forwards;
+        }
+
+        .choices {
+            display: grid;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .choice-btn {
+            background: transparent;
+            border: 1px solid var(--accent);
+            padding: 1.2rem 1.5rem;
+            font-family: 'Zen Kaku Gothic New', sans-serif;
+            font-size: 0.95rem;
+            color: var(--accent);
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            border-radius: 2px;
+            opacity: 0;
+            animation: slideUp 0.6s ease-out forwards;
+        }
+
+        .choice-btn:nth-child(1) { animation-delay: 0.5s; }
+        .choice-btn:nth-child(2) { animation-delay: 0.6s; }
+        .choice-btn:nth-child(3) { animation-delay: 0.7s; }
+        .choice-btn:nth-child(4) { animation-delay: 0.8s; }
+
+        .choice-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--accent);
+            transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: -1;
+        }
+
+        .choice-btn:hover::before {
+            left: 0;
+        }
+
+        .choice-btn:hover {
+            color: var(--paper);
+            border-color: var(--accent);
+            transform: translateX(10px);
+            box-shadow: -10px 10px 30px var(--shadow);
+        }
+
+        .choice-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .choice-btn:disabled:hover {
+            transform: none;
+        }
+
+        button {
+            background: var(--accent);
+            border: none;
+            padding: 0.75rem 2rem;
+            font-family: 'Zen Kaku Gothic New', sans-serif;
+            font-size: 0.9rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--paper);
+            cursor: pointer;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        button:hover {
+            background: #6d3610;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--shadow);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--muted);
+            font-style: italic;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .concept-badge {
+            display: inline-block;
+            background: rgba(139, 69, 19, 0.1);
+            padding: 0.25rem 0.75rem;
+            border-radius: 2px;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-top: 1rem;
+            color: var(--accent);
+            border: 1px solid rgba(139, 69, 19, 0.2);
+        }
+
+        .history-btn {
+            margin-top: 2rem;
+            padding: 0.5rem 1.5rem;
+            font-size: 0.8rem;
+            background: transparent;
+            border: 1px solid var(--muted);
+            color: var(--muted);
+        }
+
+        .history-btn:hover {
+            background: var(--muted);
+            color: var(--paper);
+        }
+
+        .path-container {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(139, 69, 19, 0.2);
+        }
+
+        .path-title {
+            font-family: 'Crimson Pro', serif;
+            font-size: 0.9rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 1rem;
+        }
+
+        .path-item {
+            font-size: 0.85rem;
+            padding: 0.5rem 0;
+            color: var(--muted);
+            border-left: 2px solid rgba(139, 69, 19, 0.2);
+            padding-left: 1rem;
+            margin-left: 0.5rem;
+            margin-bottom: 0.5rem;
+            opacity: 0;
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.5;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .error {
+            background: rgba(139, 69, 19, 0.1);
+            border: 1px solid var(--accent);
+            padding: 1rem;
+            border-radius: 2px;
+            margin: 1rem 0;
+            color: var(--accent);
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2.5rem;
+            }
+            
+            .game-card {
+                padding: 2rem;
+            }
+            
+            .story-text {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">The Way of Becoming</h1>
+            <p class="subtitle">A Philosophical Journey</p>
+        </div>
+
+        <div class="game-card">
+            <div id="startScreen" class="start-screen">
+                <p class="start-description">
+                    Embark on a contemplative journey through the intertwining philosophies of Deleuze and Daoism. 
+                    Navigate through concepts of flow, multiplicity, becoming, and the Way itself.
+                </p>
+                <button onclick="startGame()">Begin Your Journey</button>
+            </div>
+
+            <div id="gameContent" style="display: none;">
+                <div id="storyContainer"></div>
+                <div id="choicesContainer" class="choices"></div>
+                <button class="history-btn" onclick="resetGame()" style="display: none;" id="resetBtn">Begin a New Path</button>
+                <div id="pathContainer" class="path-container" style="display: none;">
+                    <div class="path-title">Your Path</div>
+                    <div id="pathList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let conversationHistory = [];
+        let currentDepth = 0;
+        let choicesMade = [];
+        const MAX_DEPTH = 10;
+
+        const INITIAL_PROMPT = `You are a philosophical guide creating an interactive choose-your-own-adventure story that weaves together Deleuzean and Daoist concepts. 
+
+The story should explore concepts like:
+- Deleuze: rhizomes, becoming, multiplicities, lines of flight, deterritorialization, the Body without Organs, smooth vs striated space, assemblages
+- Daoism: wu wei (effortless action), the Dao (the Way), yin-yang, spontaneity, naturalness, emptiness, non-attachment, flow like water
+
+Create a contemplative, philosophical narrative where the protagonist encounters situations that embody these concepts. Each scenario should present a genuine philosophical dilemma or moment of insight.
+
+Start the story now. After the story segment, provide exactly 4 choices that lead to different philosophical paths. Each choice should represent a different way of engaging with the concepts (e.g., flowing vs. resisting, becoming vs. being, multiplicity vs. unity, action vs. non-action).
+
+Format your response as:
+STORY: [Your story text here, 2-3 paragraphs]
+CONCEPT: [Name one key philosophical concept being explored]
+CHOICE1: [First choice]
+CHOICE2: [Second choice]
+CHOICE3: [Third choice]
+CHOICE4: [Fourth choice]
+
+Make the story poetic, evocative, and thought-provoking. Begin.`;
+
+        function startGame() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameContent').style.display = 'block';
+            
+            conversationHistory = [];
+            choicesMade = [];
+            currentDepth = 0;
+            
+            generateStory(INITIAL_PROMPT, true);
+        }
+
+        async function generateStory(userChoice, isInitial = false) {
+            const storyContainer = document.getElementById('storyContainer');
+            const choicesContainer = document.getElementById('choicesContainer');
+            
+            storyContainer.innerHTML = '<div class="loading">Contemplating the Way...</div>';
+            choicesContainer.innerHTML = '';
+
+            if (!isInitial) {
+                conversationHistory.push({
+                    role: "user",
+                    content: userChoice
+                });
+            }
+
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        messages: isInitial 
+                            ? [{ role: "user", content: INITIAL_PROMPT }]
+                            : [
+                                { role: "user", content: INITIAL_PROMPT },
+                                ...conversationHistory.slice(1),
+                                { 
+                                    role: "user", 
+                                    content: `Continue the story based on this choice: "${userChoice}". Remember to explore the philosophical concepts deeply and provide 4 new choices. Use the same format: STORY:, CONCEPT:, CHOICE1:, CHOICE2:, CHOICE3:, CHOICE4:` 
+                                }
+                            ]
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'API request failed');
+                }
+
+                const data = await response.json();
+                const content = data.content;
+
+                conversationHistory.push({
+                    role: "assistant",
+                    content: content
+                });
+
+                displayStory(content);
+                currentDepth++;
+
+                if (currentDepth >= MAX_DEPTH) {
+                    document.getElementById('resetBtn').style.display = 'block';
+                }
+
+            } catch (error) {
+                storyContainer.innerHTML = `
+                    <div class="error">
+                        <strong>An error occurred:</strong> ${error.message}
+                        <br><br>
+                        <small>Please try again in a moment.</small>
+                    </div>
+                `;
+                console.error('Error:', error);
+            }
+        }
+
+        function displayStory(content) {
+            const storyParts = {
+                story: '',
+                concept: '',
+                choices: []
+            };
+
+            const storyMatch = content.match(/STORY:(.*?)(?=CONCEPT:|$)/s);
+            const conceptMatch = content.match(/CONCEPT:(.*?)(?=CHOICE|$)/s);
+            const choice1Match = content.match(/CHOICE1:(.*?)(?=CHOICE2:|$)/s);
+            const choice2Match = content.match(/CHOICE2:(.*?)(?=CHOICE3:|$)/s);
+            const choice3Match = content.match(/CHOICE3:(.*?)(?=CHOICE4:|$)/s);
+            const choice4Match = content.match(/CHOICE4:(.*?)$/s);
+
+            if (storyMatch) storyParts.story = storyMatch[1].trim();
+            if (conceptMatch) storyParts.concept = conceptMatch[1].trim();
+            if (choice1Match) storyParts.choices.push(choice1Match[1].trim());
+            if (choice2Match) storyParts.choices.push(choice2Match[1].trim());
+            if (choice3Match) storyParts.choices.push(choice3Match[1].trim());
+            if (choice4Match) storyParts.choices.push(choice4Match[1].trim());
+
+            const storyContainer = document.getElementById('storyContainer');
+            storyContainer.innerHTML = `
+                <div class="story-text">${storyParts.story}</div>
+                ${storyParts.concept ? `<div class="concept-badge">${storyParts.concept}</div>` : ''}
+            `;
+
+            const choicesContainer = document.getElementById('choicesContainer');
+            choicesContainer.innerHTML = '';
+
+            storyParts.choices.forEach((choice, index) => {
+                const button = document.createElement('button');
+                button.className = 'choice-btn';
+                button.textContent = choice;
+                button.onclick = () => makeChoice(choice);
+                choicesContainer.appendChild(button);
+            });
+        }
+
+        function makeChoice(choice) {
+            const buttons = document.querySelectorAll('.choice-btn');
+            buttons.forEach(btn => btn.disabled = true);
+            
+            // Add full choice to path (not truncated)
+            choicesMade.push(choice);
+            updatePath();
+            
+            generateStory(choice, false);
+        }
+
+        function updatePath() {
+            const pathContainer = document.getElementById('pathContainer');
+            const pathList = document.getElementById('pathList');
+            
+            pathContainer.style.display = 'block';
+            pathList.innerHTML = '';
+            
+            choicesMade.forEach((choice, index) => {
+                const pathItem = document.createElement('div');
+                pathItem.className = 'path-item';
+                pathItem.textContent = `Step ${index + 1}: ${choice}`;
+                pathItem.style.animationDelay = `${index * 0.1}s`;
+                pathList.appendChild(pathItem);
+            });
+        }
+
+        function resetGame() {
+            document.getElementById('startScreen').style.display = 'block';
+            document.getElementById('gameContent').style.display = 'none';
+            document.getElementById('pathList').innerHTML = '';
+            document.getElementById('resetBtn').style.display = 'none';
+            conversationHistory = [];
+            choicesMade = [];
+            currentDepth = 0;
+        }
+    </script>
+</body>
+</html>
