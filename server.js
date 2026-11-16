@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const fetch = require('node-fetch');
 const path = require('path');
 
@@ -26,7 +26,7 @@ app.post('/api/generate', async (req, res) => {
                 'anthropic-version': '2023-06-01'
             },
             body: JSON.stringify({
-                model: 'claude-sonnet-4-20250514',
+                model: process.env.CLAUDE_MODEL || 'claude-opus-5-5',
                 max_tokens: 1500,
                 messages: messages
             })
