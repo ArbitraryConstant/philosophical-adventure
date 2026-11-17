@@ -40,7 +40,16 @@ app.post('/api/generate', async (req, res) => {
         }
 
         const data = await response.json();
-        res.json({ content: data.content[0].text });
+        if (data.error) {
+            console.error('Anthropic API error:', JSON.stringify(data.error));
+            return res.status(500).json({ error: data.error.message || 'API error' });
+        }
+        const textBlock = (data.content || []).find(b => b.type === 'text');
+        if (!textBlock) {
+            console.error('No text block in response:', JSON.stringify(data).slice(0, 2000));
+            return res.status(500).json({ error: 'No text returned from Claude' });
+        }
+        res.json({ content: textBlock.text });
 
     } catch (error) {
         console.error('Error:', error);
@@ -56,3 +65,4 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
