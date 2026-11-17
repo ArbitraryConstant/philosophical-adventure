@@ -1,85 +1,57 @@
 # The Way of Becoming
 
-A philosophical choose-your-own-adventure game that explores Deleuzean and Daoist concepts through interactive storytelling.
+A philosophical choose-your-own-adventure game that explores Deleuzean and Daoist concepts through interactive storytelling. Live at [thewayofbecoming.org](https://www.thewayofbecoming.org).
 
 ## Features
 
-- Dynamic story generation using Claude API
+- Dynamic story generation using the Claude API
 - Exploration of philosophical concepts including rhizomes, wu wei, becoming, and the Dao
 - Four choices at each decision point
-- Beautiful, contemplative interface
+- A journey of up to 20 story segments, the last of which is an ending
 - Complete path tracking showing all your choices
+- Save your story at any point as plain text, Markdown, a web page, or a PDF (via print)
 
-## Deployment to Railway
+## Files
 
-### Step 1: Prepare Your Files
+- `index.html` - The game page (everything the visitor sees)
+- `server.js` - The Node.js server: holds the story prompt, talks to Claude, and checks the reply
+- `package.json` / `package-lock.json` - Dependencies and the Node.js version
+- `og-image.png` - Preview image for social media links
+- `test/server.test.js` - Automated checks (run with `npm test`)
 
-You have three files:
-- `index.html` - The game interface
-- `server.js` - The Node.js server
-- `package.json` - Dependencies configuration
-- `.gitignore` - Files to exclude from Git
+## Deployment (Railway)
 
-### Step 2: Push to GitHub
+The site is deployed on [Railway](https://railway.app) from GitHub. **Pushing to the `main` branch redeploys the live site.**
 
-1. Open PowerShell and navigate to your project folder:
-   ```powershell
-   cd path\to\your\project
-   ```
+Railway variables:
 
-2. Initialize Git (if not already done):
-   ```powershell
-   git init
-   git add .
-   git commit -m "Initial commit"
-   ```
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `ANTHROPIC_API_KEY` | Yes | Your Anthropic API key |
+| `CLAUDE_MODEL` | No | Overrides the model (default: `claude-sonnet-5-5`) |
 
-3. Create a new repository on GitHub.com and push:
-   ```powershell
-   git remote add origin https://github.com/YOUR-USERNAME/philosophical-adventure.git
-   git branch -M main
-   git push -u origin main
-   ```
+After a deploy, the Railway deploy log should show:
 
-### Step 3: Deploy on Railway
+```
+Server running on port ... (model: claude-sonnet-5-5)
+```
 
-1. Go to [railway.app](https://railway.app) and sign in with GitHub
-2. Click "New Project" → "Deploy from GitHub repo"
-3. Select your `philosophical-adventure` repository
-4. Railway will automatically detect it's a Node.js app
+If it shows a static file server (Caddy) instead, Railway failed to recognise the project as a Node.js app. The usual cause is a broken `package.json` - see the warning below.
 
-### Step 4: Add Your API Key
+### Warning: editing files on Windows
 
-1. In Railway, click on your project
-2. Go to "Variables" tab
-3. Click "New Variable"
-4. Add:
-   - Variable name: `ANTHROPIC_API_KEY`
-   - Value: `your-api-key-here` (starts with sk-ant-api03-)
-5. Click "Add"
-
-Railway will automatically redeploy with your API key.
-
-### Step 5: Access Your Game
-
-1. Railway will give you a URL (something like `https://philosophical-adventure-production.up.railway.app`)
-2. Visit that URL to play!
-3. Share it with anyone - they won't need their own API key!
+Do not save `package.json` or `server.js` with PowerShell's `Set-Content -Encoding UTF8` or `Out-File`. Windows PowerShell adds an invisible marker (a "BOM") to the start of the file, which makes `package.json` unreadable to Railway and takes the site down. Edit the files in an editor such as VS Code or Notepad instead. `npm test` checks for this.
 
 ## Local Development
 
-To run locally:
+Requires [Node.js](https://nodejs.org) 22 or newer.
 
-```bash
+```powershell
 # Install dependencies
 npm install
 
-# Set your API key
-# On Windows PowerShell:
+# Set your API key (Windows PowerShell)
 $env:ANTHROPIC_API_KEY="your-api-key-here"
-
-# On Mac/Linux:
-export ANTHROPIC_API_KEY="your-api-key-here"
 
 # Run the server
 npm start
@@ -87,19 +59,25 @@ npm start
 # Visit http://localhost:3000
 ```
 
+Run the automated checks (these never contact Anthropic and need no API key):
+
+```powershell
+npm test
+```
+
 ## How It Works
 
-- Users make choices that shape their philosophical journey
-- The server securely stores your Anthropic API key
-- Each choice triggers a new story generation
-- The path tracks all choices made (no truncation!)
-- Stories explore concepts from both Deleuze and Daoism
+- The browser sends the journey so far (stories and choices) to the server
+- The server adds the story prompt, asks Claude for the next segment, and reads the reply into a story, a concept, and four choices
+- The API key stays on the server; visitors never see it
+- Prompt caching keeps the cost of re-sending the story on every turn low; the Railway log line for each segment shows how much of the input was read from the cache
+- To limit misuse and cost, the server caps the journey length, the size of each request, and the number of requests per visitor
 
 ## Technologies
 
 - Frontend: HTML, CSS, JavaScript
 - Backend: Node.js with Express
-- AI: Claude API (Sonnet 4)
+- AI: Claude API (Claude Sonnet 5.5, with prompt caching)
 - Hosting: Railway
 
 Enjoy your journey through becoming and the Way!
