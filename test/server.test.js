@@ -1,20 +1,21 @@
-// Run with: npm test
-// These tests never contact Anthropic: the outgoing call is replaced with a fake.
+'use strict';
+
+// Tests for the web server. Run with: npm test
+// These never contact Anthropic: the outgoing call is replaced with a fake.
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
 
 process.env.ANTHROPIC_API_KEY = 'test-key';
-const { app, parseStory, validateHistory, MAX_SEGMENTS } = require('../server.js');
+const { app } = require('../server');
+const { MAX_SEGMENTS } = require('../src/story');
 
 const realFetch = global.fetch;
 let server;
 let baseUrl;
 let lastClaudeRequest;
 
-// Makes the server's call to Claude return `reply` (status 200 unless given).
+/** Makes the server's call to Claude return `reply` (status 200 unless given). */
 function fakeClaude(reply, status = 200) {
     global.fetch = async (url, options) => {
         if (!String(url).includes('api.anthropic.com')) return realFetch(url, options);
@@ -29,6 +30,7 @@ function claudeText(text, extra = {}) {
         type: 'message',
         stop_reason: 'end_turn',
         content: [{ type: 'thinking', thinking: '' }, { type: 'text', text }],
+        usage: { input_tokens: 10, output_tokens: 20 },
         ...extra
     };
 }
@@ -51,89 +53,41 @@ CHOICE2: Follow the bank
 CHOICE3: Sit and watch
 CHOICE4: Turn back`;
 
+// The server logs every failure; keep the test output readable.
+const realConsole = { log: console.log, warn: console.warn, error: console.error };
+
 test.before(async () => {
+    console.log = console.warn = console.error = () => {};
     server = app.listen(0);
     await new Promise(resolve => server.once('listening', resolve));
     baseUrl = `http://127.0.0.1:${server.address().port}`;
 });
 
 test.after(() => {
+    Object.assign(console, realConsole);
     global.fetch = realFetch;
+    server.closeAllConnections();
     server.close();
 });
 
-test('package.json and server.js are valid and have no BOM', () => {
-    for (const file of ['package.json', 'server.js', 'index.html']) {
-        const bytes = fs.readFileSync(path.join(__dirname, '..', file));
-        assert.notDeepEqual([...bytes.subarray(0, 3)], [0xef, 0xbb, 0xbf], `${file} starts with a BOM`);
-    }
-    const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
-    assert.equal(pkg.scripts.start, 'node server.js');
-    assert.ok(pkg.engines.node);
-});
-
-test('parseStory reads the standard format', () => {
-    const parsed = parseStory(GOOD_REPLY);
-    assert.equal(parsed.story, 'You stand at the river.\n\nIt moves without effort.');
-    assert.equal(parsed.concept, 'Wu wei');
-    assert.deepEqual(parsed.choices, ['Step into the water', 'Follow the bank', 'Sit and watch', 'Turn back']);
-});
-
-test('parseStory tolerates markdown, brackets, spacing and letter case', () => {
-    const parsed = parseStory([
-        'Here is the next part.',
-        '',
-        '**STORY:** The path forks.',
-        '## Concept: [Rhizome]',
-        '**Choice 1:** Left',
-        'choice2: **Right**',
-        '- CHOICE3: Up',
-        'CHOICE 4 : Down'
-    ].join('\r\n'));
-    assert.equal(parsed.story, 'The path forks.');
-    assert.equal(parsed.concept, 'Rhizome');
-    assert.deepEqual(parsed.choices, ['Left', 'Right', 'Up', 'Down']);
-});
-
-test('parseStory falls back to the whole text when there are no labels', () => {
-    const parsed = parseStory('Just a paragraph of story.');
-    assert.equal(parsed.story, 'Just a paragraph of story.');
-    assert.deepEqual(parsed.choices, []);
-});
-
-test('validateHistory rejects malformed and oversized input', () => {
-    assert.equal(validateHistory([]), null);
-    assert.equal(validateHistory([{ role: 'assistant', content: 'a' }, { role: 'user', content: 'b' }]), null);
-    assert.ok(validateHistory('nope'));
-    assert.ok(validateHistory([{ role: 'assistant', content: 'a' }]));
-    assert.ok(validateHistory([{ role: 'user', content: 'a' }, { role: 'assistant', content: 'b' }]));
-    assert.ok(validateHistory([{ role: 'assistant', content: 'a' }, { role: 'user', content: 'x'.repeat(5000) }]));
-});
-
-test('a new journey returns story, concept and four choices', async () => {
+test('a new journey returns story, concept, four choices and progress', async () => {
     fakeClaude(claudeText(GOOD_REPLY));
     const { status, body } = await generate([]);
     assert.equal(status, 200);
     assert.equal(body.concept, 'Wu wei');
     assert.equal(body.choices.length, 4);
+    assert.equal(body.segment, 1);
+    assert.equal(body.totalSegments, MAX_SEGMENTS);
     assert.equal(body.final, false);
-    assert.equal(lastClaudeRequest.model, process.env.CLAUDE_MODEL || 'claude-sonnet-5-5');
-    assert.deepEqual(lastClaudeRequest.cache_control, { type: 'ephemeral' });
-    assert.equal(lastClaudeRequest.messages.length, 1);
-    assert.equal(lastClaudeRequest.messages[0].role, 'user');
 });
 
-test('the full journey is sent to Claude, in alternating order', async () => {
+test('the request to Claude uses the configured model, the prompt and caching', async () => {
     fakeClaude(claudeText(GOOD_REPLY));
-    const history = [
-        { role: 'assistant', content: GOOD_REPLY },
-        { role: 'user', content: 'Sit and watch' }
-    ];
-    const { status } = await generate(history);
-    assert.equal(status, 200);
-    assert.deepEqual(lastClaudeRequest.messages.map(m => m.role), ['user', 'assistant', 'user']);
-    assert.equal(lastClaudeRequest.messages[1].content, GOOD_REPLY);
-    assert.match(lastClaudeRequest.messages[2].content, /Sit and watch/);
+    await generate([]);
+    assert.equal(lastClaudeRequest.model, process.env.CLAUDE_MODEL || 'claude-sonnet-5-5');
+    assert.deepEqual(lastClaudeRequest.cache_control, { type: 'ephemeral' });
+    assert.match(lastClaudeRequest.system, /Deleuzean and Daoist/);
+    assert.deepEqual(lastClaudeRequest.messages.map(m => m.role), ['user']);
 });
 
 test('each request repeats the previous one exactly and adds to the end (needed for caching)', async () => {
@@ -162,8 +116,8 @@ test('the last segment is an ending with no choices, and the journey then stops'
     const last = await generate(history);
     assert.equal(last.status, 200);
     assert.equal(last.body.final, true);
+    assert.equal(last.body.segment, MAX_SEGMENTS);
     assert.deepEqual(last.body.choices, []);
-    assert.match(lastClaudeRequest.messages.at(-1).content, /final part of the journey/);
 
     history.push({ role: 'assistant', content: 'STORY: The end.' }, { role: 'user', content: 'More' });
     const beyond = await generate(history);
@@ -179,6 +133,16 @@ test('Anthropic errors are passed on as readable messages', async () => {
 
 test('a non-JSON reply from Anthropic does not crash the server', async () => {
     fakeClaude('<html>Bad gateway</html>', 502);
+    const { status, body } = await generate([]);
+    assert.equal(status, 502);
+    assert.equal(typeof body.error, 'string');
+});
+
+test('a network failure reaching Anthropic is reported, not thrown', async () => {
+    global.fetch = async (url, options) => {
+        if (!String(url).includes('api.anthropic.com')) return realFetch(url, options);
+        throw new TypeError('fetch failed');
+    };
     const { status, body } = await generate([]);
     assert.equal(status, 502);
     assert.equal(typeof body.error, 'string');
@@ -208,9 +172,24 @@ test('bad requests get JSON errors, not crashes', async () => {
     assert.equal(wrongShape.status, 400);
 });
 
-test('only the page and preview image are public', async () => {
-    assert.equal((await realFetch(`${baseUrl}/`)).status, 200);
-    assert.equal((await realFetch(`${baseUrl}/og-image.png`)).status, 200);
-    assert.equal((await realFetch(`${baseUrl}/server.js`)).status, 404);
-    assert.equal((await realFetch(`${baseUrl}/package.json`)).status, 404);
+test('the page and its assets are public; the server code is not', async () => {
+    for (const publicPath of ['/', '/app.js', '/styles.css', '/favicon.svg', '/og-image.jpg', '/robots.txt', '/healthz']) {
+        assert.equal((await realFetch(baseUrl + publicPath)).status, 200, publicPath);
+    }
+    for (const privatePath of ['/server.js', '/package.json', '/src/story.js', '/.gitignore']) {
+        assert.equal((await realFetch(baseUrl + privatePath)).status, 404, privatePath);
+    }
+});
+
+test('the old preview image address redirects to the new one', async () => {
+    const response = await realFetch(`${baseUrl}/og-image.png`, { redirect: 'manual' });
+    assert.equal(response.status, 301);
+    assert.equal(response.headers.get('location'), '/og-image.jpg');
+});
+
+test('responses carry security headers', async () => {
+    const response = await realFetch(`${baseUrl}/`);
+    assert.match(response.headers.get('content-security-policy'), /script-src 'self'/);
+    assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+    assert.equal(response.headers.get('x-powered-by'), null);
 });

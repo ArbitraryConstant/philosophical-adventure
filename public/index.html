@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Way of Becoming</title>
+    <meta name="description" content="A contemplative journey through Deleuze and Daoism. Explore concepts of flow, multiplicity, becoming, and the Way.">
+    <meta name="theme-color" content="#f5f1e8">
+    <link rel="canonical" href="https://www.thewayofbecoming.org/">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+
+    <!-- Open Graph / social media preview -->
+    <meta property="og:title" content="The Way of Becoming">
+    <meta property="og:description" content="A contemplative journey through Deleuze and Daoism. Explore concepts of flow, multiplicity, becoming, and the Way.">
+    <meta property="og:image" content="https://www.thewayofbecoming.org/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="800">
+    <meta property="og:url" content="https://www.thewayofbecoming.org/">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="The Way of Becoming">
+    <meta name="twitter:description" content="A philosophical choose-your-own-adventure exploring Deleuze and Daoism">
+    <meta name="twitter:image" content="https://www.thewayofbecoming.org/og-image.jpg">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@300;400;600&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/app.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">The Way of Becoming</h1>
+            <p class="subtitle">A Philosophical Journey</p>
+        </header>
+
+        <main class="game-card">
+            <noscript>
+                <p class="error">This journey needs JavaScript to run. Please enable it in your browser and reload the page.</p>
+            </noscript>
+
+            <section id="startScreen" class="start-screen">
+                <p class="start-description">
+                    Embark on a contemplative journey through the intertwining philosophies of Deleuze and Daoism.
+                    Navigate through concepts of flow, multiplicity, becoming, and the Way itself.
+                </p>
+                <div class="start-actions">
+                    <button type="button" id="continueBtn" hidden>Continue Your Journey</button>
+                    <button type="button" id="startBtn">Begin Your Journey</button>
+                </div>
+            </section>
+
+            <section id="gameContent" hidden>
+                <p id="progress" class="progress" hidden></p>
+                <div id="storyContainer" aria-live="polite"></div>
+                <div id="choicesContainer" class="choices"></div>
+
+                <div id="savePanel" class="save-panel" hidden>
+                    <button type="button" class="quiet-btn" id="saveToggle" aria-expanded="false" aria-controls="saveOptions">Save Your Story</button>
+                    <div id="saveOptions" hidden>
+                        <div class="save-options">
+                            <button type="button" class="quiet-btn" data-save-format="txt">Plain text (.txt)</button>
+                            <button type="button" class="quiet-btn" data-save-format="md">Markdown (.md)</button>
+                            <button type="button" class="quiet-btn" data-save-format="html">Web page (.html)</button>
+                            <button type="button" class="quiet-btn" data-save-format="print">Print / PDF</button>
+                        </div>
+                        <p class="save-note">Saves everything so far: each part of the story and the choices you made.</p>
+                    </div>
+                </div>
+
+                <button type="button" class="quiet-btn reset-btn" id="resetBtn" hidden>Begin a New Path</button>
+
+                <div id="pathContainer" class="path-container" hidden>
+                    <h2 class="path-title">Your Path</h2>
+                    <div id="pathList"></div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>
+                Each story is written as you go by Claude, an AI model made by Anthropic.
+                <a href="https://github.com/ArbitraryConstant/philosophical-adventure" rel="noopener">Source on GitHub</a>
+            </p>
+        </footer>
+    </div>
+</body>
+</html>

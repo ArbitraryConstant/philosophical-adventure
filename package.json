@@ -1,15 +1,36 @@
 {
   "name": "philosophical-adventure",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "A philosophical choose-your-own-adventure game exploring Deleuzean and Daoist concepts",
+  "description": "The Way of Becoming: an AI-written choose-your-own-adventure through Deleuzean and Daoist philosophy",
+  "keywords": [
+    "interactive-fiction",
+    "philosophy",
+    "deleuze",
+    "daoism",
+    "claude",
+    "anthropic"
+  ],
+  "homepage": "https://www.thewayofbecoming.org",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ArbitraryConstant/philosophical-adventure.git"
+  },
+  "license": "MIT",
+  "author": "ArbitraryConstant",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test"
+    "test": "node --test",
+    "lint": "eslint ."
   },
   "dependencies": {
     "express": "^5.3.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.15.0",
+    "globals": "^17.14.0"
   },
   "engines": {
     "node": "22.x"
